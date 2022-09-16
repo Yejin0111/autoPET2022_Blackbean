@@ -1,0 +1,44 @@
+#FROM python:3.9-slim
+FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime
+
+
+RUN groupadd -r algorithm && useradd -m --no-log-init -r -g algorithm algorithm
+
+RUN mkdir -p /opt/algorithm /input /output \
+    && chown algorithm:algorithm /opt/algorithm /input /output
+
+USER algorithm
+
+WORKDIR /opt/algorithm
+
+ENV PATH="/home/algorithm/.local/bin:${PATH}"
+
+RUN python -m pip install --user -U pip -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+COPY --chown=algorithm:algorithm requirements.txt /opt/algorithm/
+# RUN python -m pip install --user torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+# RUN python -m pip install --user torch torchvision --extra-index-url https://download.pytorch.org/whl/cu113 -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN python -m pip install --user -rrequirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+COPY --chown=algorithm:algorithm process.py /opt/algorithm/process.py
+COPY --chown=algorithm:algorithm predict.py /opt/algorithm/predict.py
+COPY --chown=algorithm:algorithm ensemble_predictions.py /home/algorithm/.local/lib/python3.8/site-packages/nnunet/inference/ensemble_predictions.py
+COPY --chown=algorithm:algorithm nnUNetTrainerV2_S5_D2_W32_LR_1e4_CropSize_192.py /home/algorithm/.local/lib/python3.8/site-packages/nnunet/training/network_training/
+
+RUN mkdir -p /opt/algorithm/checkpoints/nnUNet/
+
+# Store your weights in the container
+COPY --chown=algorithm:algorithm weights_s5d2w32_crop192_minspc.zip /opt/algorithm/checkpoints/nnUNet/
+RUN python -c "import zipfile; zipfile.ZipFile('/opt/algorithm/checkpoints/nnUNet/weights_s5d2w32_crop192_minspc.zip').extractall('/opt/algorithm/checkpoints/nnUNet/')"
+
+# nnUNet specific setup
+RUN mkdir -p /opt/algorithm/nnUNet_raw_data_base/nnUNet_raw_data/Task710_autoPET/imagesTs
+RUN mkdir -p /opt/algorithm/nnUNet_raw_data_base/nnUNet_raw_data/Task710_autoPET/result
+
+ENV nnUNet_raw_data_base="/opt/algorithm/nnUNet_raw_data_base"
+ENV RESULTS_FOLDER="/opt/algorithm/checkpoints"
+ENV MKL_SERVICE_FORCE_INTEL=1
+
+
+ENTRYPOINT python -m process $0 $@
+
