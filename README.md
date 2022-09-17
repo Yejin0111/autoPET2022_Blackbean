@@ -4,7 +4,7 @@ Our team name is **Blackbean**. We explore the ablity of U-Net for lesion segmen
 # How to use
 - Prepare the checkpoints
 
-  Download the checkpoints from [Baidu Cloud](https://pan.baidu.com/s/15o3fyv51ed2KTkYrPbNEjQ). (The password is ``gp3d``). Then extract it under ``test/``.
+  Download the checkpoints from [Baidu Cloud](https://pan.baidu.com/s/15o3fyv51ed2KTkYrPbNEjQ) (The password is ``gp3d``), or [Google Drive](https://drive.google.com/file/d/1wANllzQlSvz29ZQ-XBGI9dVdpsHnBRpK/view?usp=sharing). Then extract it under ``test/``.
 
 - Make the docker
 
